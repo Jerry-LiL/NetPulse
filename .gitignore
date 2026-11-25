@@ -1,0 +1,12 @@
+build/
+*.o
+*.d
+*.db
+*.db-wal
+*.db-shm
+__pycache__/
+.pytest_cache/
+.venv/
+.env
+*.log
+.snmp/
