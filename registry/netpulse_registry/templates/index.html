@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="refresh" content="5">
+  <title>NetPulse</title>
+  <style>
+    :root { color-scheme: light; }
+    body { margin: 0; font: 15px/1.45 "Segoe UI", Helvetica, Arial, sans-serif; color: #1c2430; background: #f4f6f8; }
+    header { background: #17324d; color: #fff; padding: 20px 28px; }
+    header p { margin: 4px 0 0; color: #d5e2ee; }
+    main { padding: 20px 28px 40px; max-width: 1100px; }
+    h2 { font-size: 16px; margin: 24px 0 8px; }
+    .table-wrap { overflow-x: auto; background: #fff; border: 1px solid #e2e7ee; }
+    table { width: 100%; min-width: 40rem; border-collapse: collapse; background: #fff; }
+    th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid #e2e7ee; vertical-align: top; }
+    th { font-size: 12px; letter-spacing: 0.03em; text-transform: uppercase; color: #5c6b7a; }
+    .ok { color: #0d6b3d; }
+    .bad { color: #9d1c1c; }
+    .muted { color: #5c6b7a; }
+    .empty { background: #fff; padding: 14px; border: 1px solid #e2e7ee; }
+    @media (max-width: 700px) {
+      header, main { padding-left: 14px; padding-right: 14px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <strong>NetPulse</strong>
+    <p>Devices registered for ICMP, TCP, and SNMP checks.</p>
+  </header>
+  <main>
+    <h2>Devices</h2>
+    {% if devices %}
+    <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Host</th>
+          <th>ICMP</th>
+          <th>TCP</th>
+          <th>SNMP</th>
+          <th>Enabled</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for device in devices %}
+        <tr>
+          <td>{{ device["name"] }}</td>
+          <td>{{ device["host"] }}</td>
+          <td>{{ "on" if device["icmp_enabled"] else "off" }}</td>
+          <td>{{ device["tcp_port"] if device["tcp_port"] else "—" }}</td>
+          <td>
+            {% if device["snmp_oid"] %}
+              {{ device["snmp_oid"] }} :{{ device["snmp_port"] or 161 }}
+            {% else %}
+              —
+            {% endif %}
+          </td>
+          <td>{{ "yes" if device["enabled"] else "no" }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    </div>
+    {% else %}
+    <p class="empty">No devices yet. Post one to <span class="muted">/api/devices</span>.</p>
+    {% endif %}
+
+    <h2>Recent results</h2>
+    {% if metrics %}
+    <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>When</th>
+          <th>Device</th>
+          <th>Check</th>
+          <th>Result</th>
+          <th>Latency</th>
+          <th>Detail</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for metric in metrics %}
+        <tr>
+          <td>{{ metric["observed_at"] }}</td>
+          <td>{{ metric["device_name"] }}</td>
+          <td>{{ metric["check_type"] }}</td>
+          <td class="{{ "ok" if metric["ok"] else "bad" }}">{{ "ok" if metric["ok"] else "failed" }}</td>
+          <td>{{ "%.3f"|format(metric["latency_ms"]) }} ms</td>
+          <td>{{ metric["detail"] }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    </div>
+    {% else %}
+    <p class="empty">No results yet. The agent posts them to <span class="muted">/api/metrics</span>.</p>
+    {% endif %}
+  </main>
+</body>
+</html>
