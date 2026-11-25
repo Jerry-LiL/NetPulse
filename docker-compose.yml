@@ -1,0 +1,53 @@
+services:
+  registry:
+    build:
+      context: .
+      dockerfile: docker/registry.Dockerfile
+    ports:
+      - "5000:5000"
+    environment:
+      NETPULSE_DB: /data/netpulse.db
+      NETPULSE_SEED: "1"
+      NETPULSE_SEED_TCP_HOST: registry
+      NETPULSE_SEED_TCP_PORT: "5000"
+      NETPULSE_SEED_SNMP_HOST: snmpd
+      NETPULSE_SEED_SNMP_PORT: "161"
+    volumes:
+      - registry-data:/data
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:5000/health')"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  snmpd:
+    build:
+      context: .
+      dockerfile: docker/snmpd.Dockerfile
+    ports:
+      - "1161:161/udp"
+
+  agent:
+    build:
+      context: .
+      dockerfile: docker/agent.Dockerfile
+    depends_on:
+      registry:
+        condition: service_healthy
+      snmpd:
+        condition: service_started
+    cap_add:
+      - NET_RAW
+    environment:
+      NETPULSE_REGISTRY_URL: http://registry:5000
+      NETPULSE_POLL_INTERVAL: "15"
+      NETPULSE_WORKERS: "2"
+      NETPULSE_HEALTH_ADDR: 0.0.0.0
+      NETPULSE_HEALTH_PORT: "8080"
+      NETPULSE_CHECK_TIMEOUT_MS: "2000"
+      NETPULSE_LOG_LEVEL: info
+    ports:
+      - "8080:8080"
+
+volumes:
+  registry-data:

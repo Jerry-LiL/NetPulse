@@ -1,0 +1,4 @@
+# id|name|host|icmp|tcp_port|snmp_port|community|oid
+# tcp_port 0 disables TCP. Leave community and oid empty to disable SNMP.
+# Point snmp_port at the local snmpd from scripts/dev-snmpd.sh.
+1|loopback|127.0.0.1|1|0|1161|public|1.3.6.1.2.1.1.1.0
